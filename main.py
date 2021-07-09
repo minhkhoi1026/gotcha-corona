@@ -17,7 +17,7 @@ CORONA_FILENAMES = ("eye-character-1.png", "eye-character-2.png", "eye-character
 CHAR_DIR = "characters"
 DOCTOR_FILENAMES = ["character-6.png", "left-character-6.png", "left-left-character-6.png", "right-character-6.png", "right-right-character-6.png"]
 MAX_WAVE = 600
-MAX_TIME = 100
+MAX_TIME = 80
 corona_templates = get_list(CHAR_DIR, CORONA_FILENAMES)
 doctor_templates = get_list(CHAR_DIR, DOCTOR_FILENAMES)
 #used_id = set()
@@ -96,7 +96,7 @@ async def play_game(websocket, path):
 
         ### send result to websocket if it is the last wave or 250s passed
         if (json_data["isLastWave"] or time.time() - start_time >= MAX_TIME):
-            catchings = random.choice(catchings, min(len(catchings, MAX_WAVE)))
+            catchings = random.choices(catchings, k = min(len(catchings), MAX_WAVE))
             json_result = make_round_json(round_id, catchings)
             # with open("test.json", "w") as f:
             #     f.write(json_result)
