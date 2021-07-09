@@ -40,7 +40,6 @@ def remove_overlap(bounds, overlap_threshold = 0.25):
             results.append([top_left, bottom_right])
     return results
 
-# NOT DONE YET
 def draw_circle(wave_image, points, round_id, wave_id):
     ### save result image file for debugging purpose
     for point in points:
@@ -50,16 +49,13 @@ def draw_circle(wave_image, points, round_id, wave_id):
         os.makedirs(waves_dir)
     cv2.imwrite(os.path.join(waves_dir, f'{wave_id}.jpg'), wave_image)
 
-def is_in_doctor_bound(doctor_bounds, point):
+def is_in_doctor_bound(doctor_bounds, point, r):
     for top_left, bottom_right in doctor_bounds:
-        x = (top_left[0] + bottom_right[0]) // 2
-        y = (top_left[1] + bottom_right[1]) // 2
-        if (top_left[0] - 40 <= point[0] and point[0] <= bottom_right[0] + 40)\
-            and (top_left[1] - 40 <= point[1] and point[1] <= bottom_right[1] + 40):
+        # x = (top_left[0] + bottom_right[0]) // 2
+        # y = (top_left[1] + bottom_right[1]) // 2
+        if top_left[0] - r <= point[0] and point[0] <= bottom_right[0] + r\
+            and top_left[1] - r <= point[1] and point[1] <= bottom_right[1] + r:
             return True
-        # if (x - 30 <= point[0] and point[0] <= x + 30)\
-        #      and (y - 30 <= point[1] and point[1] <= y + 30):
-        #      return True
     return False
 
 def is_in_doctor_point(doctor_points, point, r):

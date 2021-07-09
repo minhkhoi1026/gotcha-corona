@@ -30,7 +30,7 @@ def get_bounds(templates, wave, threshold = 0.8, multiscale = False, n_cut = 1):
             template = imutils.resize(template, width = int(template.shape[1] * 0.5))
             new_bounds = template_matcher(template, wave, threshold=threshold)
         else:
-            new_bounds = template_matcher_multiscale(template, wave, threshold = threshold, n_level = 3, scale_range = [1.7, 2.5])
+            new_bounds = template_matcher_multiscale(template, wave, threshold = threshold, scales = [0.5, 0.3])
         #new_bounds = remove_overlap(new_bounds)
         if n_cut and len(new_bounds) > n_cut:
             bounds.extend(new_bounds[:n_cut])
@@ -55,7 +55,7 @@ def catch_corona(wave):
         x = (top_left[0] + bottom_right[0]) // 2
         y = (top_left[1] + bottom_right[1]) // 2
         if not is_in_doctor_point(doctor_points, (x, y), r)\
-            and not is_in_doctor_bound(doctor_bounds, (x, y)):
+            and not is_in_doctor_bound(doctor_bounds, (x, y), r):
             results.append((x, y))
 
     return results
