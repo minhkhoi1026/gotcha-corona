@@ -48,7 +48,7 @@ def catch_corona(wave):
     
     # calculate result, choose one point for each rectangle
     # remove all point in doctor's zone
-    r = 70
+    r = 65
     results = []
     for top_left, bottom_right in corona_bounds:
         x = (top_left[0] + bottom_right[0]) // 2
