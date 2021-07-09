@@ -7,6 +7,7 @@ import json
 import os
 import imutils
 import time
+import concurrent.futures
 import random
 random.seed(0)
 # custom import
@@ -79,35 +80,38 @@ async def play_game(websocket, path):
         # wave_count += 1
         if (json_data["isLastWave"]):
             break
-
+    
+    waves_data = []
+    
     for json_data in json_datas:
         wave = base64_to_image(json_data['base64Image'])
         wave_id = json_data["waveId"]
-        round_id = json_data["roundId"]
-
-        ### catch corona in a wave image
-        results = catch_corona(wave)
-        # print(results)
-        # draw_circle(wave, results, round_id, wave_id)
-
-        ### store catching positions in the list
-        catchings.append(make_wave_dict(wave_id, results))
-        #print(wave_count, wave_id)
-
+        waves_data.append([wave,wave_id])
+    with concurrent.futures.ThreadPoolExecutor(max_workers=24) as executor:
+        futures = {executor.submit(catch_corona,wave[0]): wave for wave in waves_data}
+        for future in concurrent.futures.as_completed(futures):
+            ### catch corona in a wave image
+            # results = catch_corona(wave)
+            # print(results)
+            # draw_circle(wave, results, round_id, wave_id)
+            wave_id = futures[future][1]
+            ### store catching positions in the list
+            catchings.append(make_wave_dict(wave_id, future.result()))
+            #print(wave_count, wave_id)
         ### send result to websocket if it is the last wave or 250s passed
-        if (json_data["isLastWave"] or time.time() - start_time >= MAX_TIME):
-            catchings = random.choices(catchings, k = min(len(catchings), MAX_WAVE))
+        #if (json_data["isLastWave"] or time.time() - start_time >= MAX_TIME):
+        #catchings = random.choices(catchings, k = min(len(catchings), MAX_WAVE))
+        if (json_datas!=[]):
+            round_id = json_datas[0]["roundId"]
             json_result = make_round_json(round_id, catchings)
-            # with open("test.json", "w") as f:
-            #     f.write(json_result)
-            # used_id.add(round_id)
-            
+        # with open("test.json", "w") as f:
+        #     f.write(json_result)
+        # used_id.add(round_id)
             await websocket.send(json_result)
             print(f"Round id: {round_id}, time: {time.time() - start_time}")
-
-            catchings = []
-            json_datas = []
-            break
+        catchings = []
+        json_datas = []
+        #break
 
 start_server = websockets.serve(play_game, "localhost", 8765, max_size=100000000)
 
