@@ -59,7 +59,7 @@ def catch_corona(wave):
     
     # calculate result, choose one point for each rectangle
     # remove all point in doctor's zone
-    r = 70
+    r = 50
     results = []
     for top_left, bottom_right in corona_bounds:
         x = (top_left[0] + bottom_right[0]) // 2
@@ -70,56 +70,18 @@ def catch_corona(wave):
 
     return results
 
-async def play_game(websocket, path):
-    print('Corona Killer is ready to play!')
-    catchings = []
-    json_datas = []
-    wave_count = 0
-    start_time = False
-    while True:
-        ### receive a socket message (wave)
-        try:
-            data = await websocket.recv()
-            if not start_time:
-                start_time = time.time()
-        except Exception as e:
-            print('Error: ' + str(e))
-            break
-        json_data = json.loads(data)
-        json_datas.append(json_data)
-        # wave_count += 1
-        if (json_data["isLastWave"]):
-            break
-
-    for wave_count, json_data in enumerate(json_datas):
+def solve(json_datas):
+    for i, json_data in enumerate(json_datas):
         wave = base64_to_image(json_data['base64Image'])
         wave_id = json_data["waveId"]
         round_id = json_data["roundId"]
 
         ### catch corona in a wave image
         results = catch_corona(wave)
+        print(i)
         # print(results)
-        # draw_circle(wave, results, round_id, wave_id)
+        draw_circle(wave, results, round_id, wave_id)
 
-        ### store catching positions in the list
-        catchings.append(make_wave_dict(wave_id, results))
-        #print(wave_count, wave_id)
-
-        ### send result to websocket if it is the last wave or 250s passed
-        if (json_data["isLastWave"] or time.time() - start_time >= 250 or wave_count == 700):
-            json_result = make_round_json(round_id, catchings)
-            # with open("test.json", "w") as f:
-            #     f.write(json_result)
-            # used_id.add(round_id)
-            
-            await websocket.send(json_result)
-            print(f"Round id: {round_id}, time: {time.time() - start_time}")
-
-            catchings = []
-            json_datas = []
-            break
-
-start_server = websockets.serve(play_game, "localhost", 8765, max_size=100000000)
-
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+with open("test1.json", "r") as f:
+    json_datas = json.load(f)
+solve(json_datas)

@@ -66,8 +66,8 @@ def is_in_doctor_bound(doctor_bounds, point):
     for top_left, bottom_right in doctor_bounds:
         x = (top_left[0] + bottom_right[0]) // 2
         y = (top_left[1] + bottom_right[1]) // 2
-        if (top_left[0] - 30 <= point[0] and point[0] <= bottom_right[0] + 30)\
-            and (top_left[1] - 30 <= point[1] and point[1] <= bottom_right[1] + 30):
+        if (top_left[0] - 40 <= point[0] and point[0] <= bottom_right[0] + 40)\
+            and (top_left[1] - 40 <= point[1] and point[1] <= bottom_right[1] + 40):
             return True
         # if (x - 40 <= point[0] and point[0] <= x + 40)\
         #      and (y - 40 <= point[1] and point[1] <= y + 40):
