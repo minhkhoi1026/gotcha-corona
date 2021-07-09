@@ -90,7 +90,7 @@ def ORB_detector_BF_matching(template, wave):
     cv2.waitKey()
 
 '''Template matching using SIFT detector and FLANN matching'''
-def SIFT_detector_FLANN_matching(template, wave, threshold = 0.75):
+def SIFT_detector_FLANN_matching(template, wave, threshold = 0.75, visualize = False):
     # Initiate SIFT detector
     sift = cv2.SIFT_create()
 
@@ -115,12 +115,13 @@ def SIFT_detector_FLANN_matching(template, wave, threshold = 0.75):
             matchesMask[i] = [1,0]
             results.append(kp2[m.trainIdx].pt)
 
-    # draw_params = dict(matchColor = (0, 255, 0),
-    #                 singlePointColor = (255, 0, 0),
-    #                 matchesMask = matchesMask,
-    #                 flags = cv2.DrawMatchesFlags_DEFAULT)
-    # img3 = cv2.drawMatchesKnn(template, kp1, wave, kp2, matches, None, **draw_params)
-    # cv2.imshow('Good Matches', img3)
-    # cv2.waitKey()
+    if visualize:
+        draw_params = dict(matchColor = (0, 255, 0),
+                        singlePointColor = (255, 0, 0),
+                        matchesMask = matchesMask,
+                        flags = cv2.DrawMatchesFlags_DEFAULT)
+        img3 = cv2.drawMatchesKnn(template, kp1, wave, kp2, matches, None, **draw_params)
+        cv2.imshow('Good Matches', img3)
+        cv2.waitKey()
 
     return results

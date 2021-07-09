@@ -26,5 +26,5 @@ DOCTOR_FILENAMES = ["character-6.png", "mask-character-6.png", "left-character-6
 templates = get_list(CHAR_DIR, DOCTOR_FILENAMES)
 points = []
 for template in templates:
-	SIFT_detector_FLANN_matching(template, wave)
+	SIFT_detector_FLANN_matching(template, wave, visualize=True)
 #print(time.time() - start_time)
