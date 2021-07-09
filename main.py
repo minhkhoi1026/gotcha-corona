@@ -1,4 +1,5 @@
 import asyncio
+from main_high import R_BOUND, R_POINT
 import cv2
 import numpy as np
 import websockets
@@ -19,6 +20,8 @@ CHAR_DIR = "characters"
 DOCTOR_FILENAMES = ["character-6.png", "left-character-6.png", "left-left-character-6.png", "right-character-6.png", "right-right-character-6.png"]
 MAX_WAVE = 1000
 MAX_TIME = 270
+R_POINT = 65
+R_BOUND = 40
 corona_templates = get_list(CHAR_DIR, CORONA_FILENAMES)
 doctor_templates = get_list(CHAR_DIR, DOCTOR_FILENAMES)
 #used_id = set()
@@ -49,13 +52,12 @@ def catch_corona(wave):
     
     # calculate result, choose one point for each rectangle
     # remove all point in doctor's zone
-    r = 65
     results = []
     for top_left, bottom_right in corona_bounds:
         x = (top_left[0] + bottom_right[0]) // 2
         y = (top_left[1] + bottom_right[1]) // 2
-        if not is_in_doctor_point(doctor_points, (x, y), r)\
-            and not is_in_doctor_bound(doctor_bounds, (x, y), r):
+        if not is_in_doctor_point(doctor_points, (x, y), R_POINT)\
+            and not is_in_doctor_bound(doctor_bounds, (x, y), R_BOUND):
             results.append((x, y))
 
     return results
