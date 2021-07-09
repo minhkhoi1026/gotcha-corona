@@ -22,9 +22,9 @@ gray_wave = cv2.cvtColor(wave, cv2.COLOR_BGR2GRAY)
 
 # template matching
 CHAR_DIR = "characters"
-DOCTOR_FILENAMES = ["character-6.png", "left-character-6.png", "left-left-character-6.png", "right-character-6.png", "right-right-character-6.png"]
+DOCTOR_FILENAMES = ["character-6.png", "mask-character-6.png", "left-character-6.png", "left-left-character-6.png", "right-character-6.png", "right-right-character-6.png"]
 templates = get_list(CHAR_DIR, DOCTOR_FILENAMES)
 points = []
 for template in templates:
-	ORB_detector_BF_matching(template, wave)
+	SIFT_detector_FLANN_matching(template, wave)
 #print(time.time() - start_time)

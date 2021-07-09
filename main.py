@@ -7,6 +7,8 @@ import json
 import os
 import imutils
 import time
+import random
+random.seed(0)
 # custom import
 from my_matcher import *
 from utils import *
@@ -14,7 +16,8 @@ from utils import *
 CORONA_FILENAMES = ("eye-character-1.png", "eye-character-2.png", "eye-character-3.png", "eye-character-4.png") 
 CHAR_DIR = "characters"
 DOCTOR_FILENAMES = ["character-6.png", "left-character-6.png", "left-left-character-6.png", "right-character-6.png", "right-right-character-6.png"]
-DOCTOR_ORG_FILENAME = ["character-6.png"]
+MAX_WAVE = 600
+MAX_TIME = 100
 corona_templates = get_list(CHAR_DIR, CORONA_FILENAMES)
 doctor_templates = get_list(CHAR_DIR, DOCTOR_FILENAMES)
 #used_id = set()
@@ -77,7 +80,7 @@ async def play_game(websocket, path):
         if (json_data["isLastWave"]):
             break
 
-    for wave_count, json_data in enumerate(json_datas):
+    for json_data in json_datas:
         wave = base64_to_image(json_data['base64Image'])
         wave_id = json_data["waveId"]
         round_id = json_data["roundId"]
@@ -92,7 +95,8 @@ async def play_game(websocket, path):
         #print(wave_count, wave_id)
 
         ### send result to websocket if it is the last wave or 250s passed
-        if (json_data["isLastWave"] or time.time() - start_time >= 250 or wave_count == 700):
+        if (json_data["isLastWave"] or time.time() - start_time >= MAX_TIME):
+            catchings = random.choice(catchings, min(len(catchings, MAX_WAVE)))
             json_result = make_round_json(round_id, catchings)
             # with open("test.json", "w") as f:
             #     f.write(json_result)
