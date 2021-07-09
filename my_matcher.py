@@ -34,7 +34,7 @@ def template_matcher(template, wave, method = cv2.TM_CCOEFF_NORMED, threshold = 
 
 '''template matching using template matching algorithm 
 combine with image pyramid for multiscale matching'''
-def template_matcher_multiscale(template, wave, threshold = 0.8, n_level = 5, scale_range = [1.5, 2.5]):
+def template_matcher_multiscale(template, wave, threshold = 0.8, scales = [0.5, 0.3]):
     # Convert to grayscale
     # image =  copy.deepcopy(wave)
     wave = cv2.cvtColor(wave, cv2.COLOR_BGR2GRAY)
@@ -43,34 +43,27 @@ def template_matcher_multiscale(template, wave, threshold = 0.8, n_level = 5, sc
     # Store width and height of template in w and h
     w, h = template.shape[::-1]
     found = None
-    
-    for scale in np.linspace(scale_range[0], scale_range[1], n_level)[::-1]:
-    
+    results = []
+    temps = []
+    for scale in scales:
         # resize the image according to the scale, and keep track
         # of the ratio of the resizing
-        resized_wave = imutils.resize(wave, width = int(wave.shape[1] * scale))
-        r = wave.shape[1] / float(resized_wave.shape[1])
-    
-        if resized_wave.shape[0] < h or resized_wave.shape[1] < w:
-                break
+        resized_template = imutils.resize(template, width = int(template.shape[1] * scale))
 
-        matches = cv2.matchTemplate(resized_wave, template, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(matches)
-        if (not found) or max_val > found[0]:
-            found = (max_val, max_loc, r)
+        matches = cv2.matchTemplate(wave, resized_template, cv2.TM_CCOEFF_NORMED)
+        # get location of all matches
+        locs = np.where(matches >= threshold)
+        
+        for loc in zip(*locs[::-1]):
+            temps.append([matches[loc[1], loc[0]], loc, scale])
   
-    # unpack the found variable and compute the (x, y) coordinates
-    # of the bounding box based on the resized ratio
-    (_, max_loc, r) = found
-    top_left = (int(max_loc[0] * r), int(max_loc[1] * r))
-    bottom_right = (int((max_loc[0] + w) * r), int((max_loc[1] + h) * r))
-    results = [[top_left, bottom_right]]
-    
-    # draw a bounding box around the detected result and display the image
-    # for top_left, bottom_right in results:
-    #     cv2.rectangle(image, top_left, bottom_right, (0, 0, 255), 2)
-    # cv2.imshow("Result", image)
-    # cv2.waitKey(0)
+    cmp = lambda item: -item[0]
+    temps.sort(key = cmp)
+    results = []
+    for _, top_left, r in temps:
+        bottom_right = (top_left[0] + w * r, top_left[1] + h * r)
+        results.append([top_left, bottom_right])
+
     return results
 
 '''Feature matching using ORB detector and Brute Force matching'''
