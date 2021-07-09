@@ -57,8 +57,8 @@ def is_in_doctor_bound(doctor_bounds, point):
         if (top_left[0] - 30 <= point[0] and point[0] <= bottom_right[0] + 30)\
             and (top_left[1] - 30 <= point[1] and point[1] <= bottom_right[1] + 30):
             return True
-        # if (x - 40 <= point[0] and point[0] <= x + 40)\
-        #      and (y - 40 <= point[1] and point[1] <= y + 40):
+        # if (x - 30 <= point[0] and point[0] <= x + 30)\
+        #      and (y - 30 <= point[1] and point[1] <= y + 30):
         #      return True
     return False
 
