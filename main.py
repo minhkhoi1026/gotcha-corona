@@ -16,8 +16,8 @@ from utils import *
 CORONA_FILENAMES = ("eye-character-1.png", "eye-character-2.png", "eye-character-3.png", "eye-character-4.png") 
 CHAR_DIR = "characters"
 DOCTOR_FILENAMES = ["character-6.png", "left-character-6.png", "left-left-character-6.png", "right-character-6.png", "right-right-character-6.png"]
-MAX_WAVE = 600
-MAX_TIME = 250
+MAX_WAVE = 1000
+MAX_TIME = 270
 corona_templates = get_list(CHAR_DIR, CORONA_FILENAMES)
 doctor_templates = get_list(CHAR_DIR, DOCTOR_FILENAMES)
 #used_id = set()
@@ -48,7 +48,7 @@ def catch_corona(wave):
     
     # calculate result, choose one point for each rectangle
     # remove all point in doctor's zone
-    r = 70
+    r = 65
     results = []
     for top_left, bottom_right in corona_bounds:
         x = (top_left[0] + bottom_right[0]) // 2
