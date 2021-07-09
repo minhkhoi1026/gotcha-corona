@@ -36,20 +36,6 @@ def get_bounds(templates, wave, threshold = 0.8, multiscale = False, n_cut = 1):
     bounds = remove_overlap(bounds)
     return bounds
 
-def catch_corona2(wave):
-    # detect each corona's and doctor's rectangle bound
-    corona_bounds = get_bounds(CORONA_FILENAMES, wave, threshold = 0.8)
-    doctor_bounds = get_bounds(doctor_templates, wave, threshold = 0.3, n_cut=5)
-    
-    # calculate result, choose one point for each rectangle
-    results = []
-    for top_left, bottom_right in corona_bounds:
-        x = (top_left[0] + bottom_right[0]) // 2
-        y = (top_left[1] + bottom_right[1]) // 2
-        if not is_in_doctor_bound(doctor_bounds, (x, y)):
-            results.append((x, y))
-
-    return results
 
 def catch_corona(wave):
     # detect each corona's and doctor's rectangle bound

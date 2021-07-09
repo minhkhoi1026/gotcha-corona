@@ -1,6 +1,7 @@
 import cv2
 import argparse
 from my_matcher import *
+from utils import *
 import time
 
 # construct the argument parser and parse the arguments
@@ -20,6 +21,10 @@ wave = cv2.imread(args["image"], cv2.IMREAD_UNCHANGED)
 gray_wave = cv2.cvtColor(wave, cv2.COLOR_BGR2GRAY)
 
 # template matching
-start_time = time.time()
-points = SIFT_detector_FLANN_matching(template, wave)
-print(time.time() - start_time)
+CHAR_DIR = "characters"
+DOCTOR_FILENAMES = ["character-6.png", "left-character-6.png", "left-left-character-6.png", "right-character-6.png", "right-right-character-6.png"]
+templates = get_list(CHAR_DIR, DOCTOR_FILENAMES)
+points = []
+for template in templates:
+	ORB_detector_BF_matching(template, wave)
+#print(time.time() - start_time)
