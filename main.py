@@ -6,78 +6,118 @@ import base64
 import json
 import os
 import imutils
+import time
 # custom import
 from my_matcher import *
 from utils import *
 
-EYE_CORONA_PATHS = ("eye-character-1.png", "eye-character-2.png", "eye-character-3.png", "eye-character-4.png") 
+CORONA_FILENAMES = ("eye-character-1.png", "eye-character-2.png", "eye-character-3.png", "eye-character-4.png") 
 CHAR_DIR = "characters"
+DOCTOR_FILENAMES = ["character-6.png", "left-character-6.png", "left-left-character-6.png", "right-character-6.png", "right-right-character-6.png"]
+DOCTOR_ORG_FILENAME = ["character-6.png"]
+corona_templates = get_list(CHAR_DIR, CORONA_FILENAMES)
+doctor_templates = get_list(CHAR_DIR, DOCTOR_FILENAMES)
+used_id = set()
 
-def catch_corona(wave_image, wave_id):
-    corona_bounds = []
-    for path in EYE_CORONA_PATHS:
-        full_path = os.path.join(CHAR_DIR, path)
-        template_image = cv2.imread(full_path, cv2.IMREAD_UNCHANGED)
-        template_image = imutils.resize(template_image, width = int(template_image.shape[1] * 0.5))
-        corona_bounds.extend(template_matcher(template_image, wave_image))
-    corona_bounds = remove_overlap(corona_bounds)
+def get_bounds(templates, wave, threshold = 0.8, multiscale = False, n_cut = 1):
+    bounds = []
+    for template in templates:
+        if not multiscale:
+            template = imutils.resize(template, width = int(template.shape[1] * 0.5))
+            new_bounds = template_matcher(template, wave, threshold=threshold)
+        else:
+            new_bounds = template_matcher_multiscale(template, wave, threshold = threshold, n_level = 3, scale_range = [1.7, 2.5])
+        #new_bounds = remove_overlap(new_bounds)
+        if n_cut and len(new_bounds) > n_cut:
+            bounds.extend(new_bounds[:n_cut])
+        else:
+            bounds.extend(new_bounds)
+    # remove bound that is overlapped
+    bounds = remove_overlap(bounds)
+    return bounds
+
+def catch_corona2(wave):
+    # detect each corona's and doctor's rectangle bound
+    corona_bounds = get_bounds(CORONA_FILENAMES, wave, threshold = 0.8)
+    doctor_bounds = get_bounds(doctor_templates, wave, threshold = 0.3, n_cut=5)
     
+    # calculate result, choose one point for each rectangle
     results = []
     for top_left, bottom_right in corona_bounds:
         x = (top_left[0] + bottom_right[0]) // 2
         y = (top_left[1] + bottom_right[1]) // 2
-        results.append((x, y))
+        if not is_in_doctor_bound(doctor_bounds, (x, y)):
+            results.append((x, y))
+
+    return results
+
+def catch_corona(wave):
+    # detect each corona's and doctor's rectangle bound
+    corona_bounds = get_bounds(corona_templates, wave, threshold = 0.8, n_cut=None)
+    doctor_points = SIFT_detector_FLANN_matching(doctor_templates[0], wave)
+    doctor_bounds = get_bounds(doctor_templates[1:], wave, threshold = 0.3, n_cut=5)
+    
+    # calculate result, choose one point for each rectangle
+    r = 50
+    results = []
+    for top_left, bottom_right in corona_bounds:
+        x = (top_left[0] + bottom_right[0]) // 2
+        y = (top_left[1] + bottom_right[1]) // 2
+        if not is_in_doctor_point(doctor_points, (x, y), r)\
+            and not is_in_doctor_bound(doctor_bounds, (x, y)):
+            results.append((x, y))
 
     return results
 
 async def play_game(websocket, path):
     print('Corona Killer is ready to play!')
     catchings = []
-    last_round_id = ''
+    json_datas = []
     wave_count = 0
-    
+    start_time = False
     while True:
-
         ### receive a socket message (wave)
         try:
             data = await websocket.recv()
+            if not start_time:
+                start_time = time.time()
         except Exception as e:
-            print('Error: ' + e)
+            print('Error: ' + str(e))
+            break
+        json_data = json.loads(data)
+        json_datas.append(json_data)
+        # wave_count += 1
+        if (json_data["isLastWave"]):
             break
 
-        json_data = json.loads(data)
-
-        ### check if starting a new round
-        if json_data["roundId"] != last_round_id:
-            #print(f'> Catching corona for round {json_data["roundId"]}...')
-            last_round_id = json_data["roundId"]
+    for json_data in json_datas:
+        wave = base64_to_image(json_data['base64Image'])
+        wave_id = json_data["waveId"]
+        round_id = json_data["roundId"]
 
         ### catch corona in a wave image
-        wave_image = base64_to_image(json_data['base64Image'])
-        wave_id = json_data["waveId"]
-        results = catch_corona(wave_image, wave_id)
+        results = catch_corona(wave)
+        # print(results)
+        # draw_circle(wave, results, round_id, wave_id)
 
         ### store catching positions in the list
         catchings.append(make_wave_dict(wave_id, results))
-
-        print(f'>>> Wave #{wave_count:03d}: {json_data["waveId"]}')
-        wave_count = wave_count + 1
+        #print(wave_count, wave_id)
 
         ### send result to websocket if it is the last wave
-        if json_data["isLastWave"]:
-            round_id = json_data["roundId"]
-            print(f'> Submitting result for round {round_id}...')
 
+        if (json_data["isLastWave"] or time.time() - start_time >= 150):
             json_result = make_round_json(round_id, catchings)
-            with open("test.json", "w") as f:
-                f.write(json_result)
-
+            # with open("test.json", "w") as f:
+            #     f.write(json_result)
+            used_id.add(round_id)
+            
             await websocket.send(json_result)
-            print('> Submitted.')
+            print(f"Round id: {round_id}, time: {time.time() - start_time}")
 
             catchings = []
-            wave_count = 0
-
+            json_datas = []
+            break
 
 start_server = websockets.serve(play_game, "localhost", 8765, max_size=100000000)
 

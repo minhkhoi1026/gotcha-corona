@@ -2,6 +2,7 @@ import json
 import base64
 import numpy as np
 import cv2
+import os
 
 def make_round_json(round_id, catchings):
     return json.dumps({"roundId": round_id, "catchings": catchings})
@@ -40,13 +41,49 @@ def remove_overlap(bounds, overlap_threshold = 0.25):
     return results
 
 # NOT DONE YET
-def draw_bound(wave_image, bounds):
-    cv2.circle(wave_image, (x,y), radius=10, color=(0, 0, 255), thickness=-1)
-
+def draw_circle(wave_image, points, round_id, wave_id):
     ### save result image file for debugging purpose
-    for result in bounds:
-        cv2.rectangle(wave_image, result[0], result[1], (0, 0, 255), 2)
-    waves_dir = f'waves/abc/'
+    for point in points:
+        cv2.circle(wave_image, point, radius=10, color=(0, 0, 255), thickness=-1)
+    waves_dir = f'waves/{round_id}/'
     if not os.path.exists(waves_dir):
         os.makedirs(waves_dir)
     cv2.imwrite(os.path.join(waves_dir, f'{wave_id}.jpg'), wave_image)
+
+def is_in_doctor(doctor_bounds, point):
+    for top_left, bottom_right in doctor_bounds:
+        x = (top_left[0] + bottom_right[0]) // 2
+        y = (top_left[1] + bottom_right[1]) // 2
+        if (top_left[0] - 30 <= point[0] and point[0] <= bottom_right[0] + 30)\
+            and (top_left[1] - 30 <= point[1] and point[1] <= bottom_right[1] + 30):
+            return True
+        # if (x - 40 <= point[0] and point[0] <= x + 40)\
+        #      and (y - 40 <= point[1] and point[1] <= y + 40):
+        #      return True
+    return False
+
+def is_in_doctor_bound(doctor_bounds, point):
+    for top_left, bottom_right in doctor_bounds:
+        x = (top_left[0] + bottom_right[0]) // 2
+        y = (top_left[1] + bottom_right[1]) // 2
+        if (top_left[0] - 30 <= point[0] and point[0] <= bottom_right[0] + 30)\
+            and (top_left[1] - 30 <= point[1] and point[1] <= bottom_right[1] + 30):
+            return True
+        # if (x - 40 <= point[0] and point[0] <= x + 40)\
+        #      and (y - 40 <= point[1] and point[1] <= y + 40):
+        #      return True
+    return False
+
+def is_in_doctor_point(doctor_points, point, r):
+    for x, y in doctor_points:
+        if (x - r <= point[0] and point[0] <= x + r)\
+            and (y - r <= point[1] and point[1] <= y + r):
+            return True
+    return False
+
+def get_list(dir, filenames):
+    images = []
+    for filename in filenames:
+        full_path = os.path.join(dir, filename)
+        images.append(cv2.imread(full_path, cv2.IMREAD_UNCHANGED))
+    return images
