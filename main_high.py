@@ -46,7 +46,7 @@ def catch_corona(wave):
     # detect each corona's and doctor's rectangle bound
     corona_bounds = get_bounds(corona_templates, wave, threshold = 0.8, n_cut=None)
     doctor_points = SIFT_detector_FLANN_matching(doctor_templates[0], wave)
-    doctor_bounds = get_bounds(doctor_templates[3:5], wave, threshold = 0.3, multiscale = True, n_cut=4)
+    doctor_bounds = get_bounds(doctor_templates[3:5], wave, threshold = 0.4, multiscale = True, n_cut=4)
     # print(len(doctor_bounds))
     
     # calculate result, choose one point for each rectangle
@@ -90,9 +90,9 @@ async def play_game(websocket, path):
         # wave_count += 1
         if (json_data["isLastWave"]):
             break
-    
+    print("Receive completed!")
     waves_data = []
-    
+    print("Processing Data...")
     for json_data in json_datas:
         wave = base64_to_image(json_data['base64Image'])
         wave_id = json_data["waveId"]

@@ -17,11 +17,11 @@ from utils import *
 
 CORONA_FILENAMES = ("eye-character-1.png", "eye-character-2.png", "eye-character-3.png", "eye-character-4.png") 
 CHAR_DIR = "characters"
-DOCTOR_FILENAMES = ["character-6.png", "left-character-6.png", "left-left-character-6.png", "right-character-6.png", "right-right-character-6.png"]
+DOCTOR_FILENAMES = ["character-6.png", "c6_1.png", "c6_2.png", "c6_3.png", "c6_4.png"]
 MAX_WAVE = 1000
 MAX_TIME = 270
-R_POINT = 65
-R_BOUND = 40
+R_POINT = 100
+R_BOUND = 70
 corona_templates = get_list(CHAR_DIR, CORONA_FILENAMES)
 doctor_templates = get_list(CHAR_DIR, DOCTOR_FILENAMES)
 #used_id = set()
@@ -46,9 +46,9 @@ def get_bounds(templates, wave, threshold = 0.8, multiscale = False, n_cut = 1):
 
 def catch_corona(wave):
     # detect each corona's and doctor's rectangle bound
-    corona_bounds = get_bounds(corona_templates, wave, threshold = 0.8, n_cut=None)
+    corona_bounds = get_bounds(corona_templates, wave, threshold = 0.85, n_cut=5)
     doctor_points = SIFT_detector_FLANN_matching(doctor_templates[0], wave)
-    doctor_bounds = get_bounds(doctor_templates[1:], wave, threshold = 0.3, n_cut=5)
+    doctor_bounds = get_bounds(doctor_templates[1:], wave, threshold = 0.2, n_cut=10)
     
     # calculate result, choose one point for each rectangle
     # remove all point in doctor's zone
@@ -56,8 +56,8 @@ def catch_corona(wave):
     for top_left, bottom_right in corona_bounds:
         x = (top_left[0] + bottom_right[0]) // 2
         y = (top_left[1] + bottom_right[1]) // 2
-        if not is_in_doctor_point(doctor_points, (x, y), R_POINT)\
-            and not is_in_doctor_bound(doctor_bounds, (x, y), R_BOUND):
+        if (not is_in_doctor_point(doctor_points, (x, y), R_POINT))\
+            and (not is_in_doctor_bound(doctor_bounds, (x, y), R_BOUND)):
             results.append((x, y))
 
     return results
